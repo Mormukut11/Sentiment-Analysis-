@@ -1,0 +1,43 @@
+#read the data in Rstudio
+mydata<-read.csv("path")
+# Loading required packages
+library(car)
+library(plyr)
+
+# Set dependent variable as numeric
+mydata$Ins = as.numeric(mydata$Ins)
+
+# Fit a linear model to the data
+fit=lm(Ins ~ AcctAge+DDA + DDABal +CashBk, data=mydata)
+
+# Calculating VIF for each independent variable
+vif(fit)
+
+# Set a VIF threshold. All the variables having higher VIF than threshold
+#are dropped from the model
+threshold=2.5
+
+# Sequentially drop the variable with the largest VIF until
+# all variables have VIF less than threshold
+drop=TRUE
+
+aftervif=data.frame()
+while(drop==TRUE) {
+  vfit=vif(fit)
+  aftervif=rbind.fill(aftervif,as.data.frame(t(vfit)))
+  if(max(vfit)>threshold) { fit=
+  update(fit,as.formula(paste(".","~",".","-",names(which.max(vfit))))) }
+  else { drop=FALSE }}
+
+# Model after removing correlated Variables
+print(fit)
+
+# How variables removed sequentially
+t_aftervif= as.data.frame(t(aftervif))
+edit(t_aftervif)
+
+# Final (uncorrelated) variables with their VIFs
+vfit_d= as.data.frame(vfit)
+
+# Exporting variables
+write.csv (vfit_d, "C:\\Users\\Deepanshu Bhalla\\Desktop\\VIF.csv")
